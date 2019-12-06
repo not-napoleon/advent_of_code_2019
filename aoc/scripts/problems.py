@@ -5,6 +5,26 @@ import click
 
 from tqdm import tqdm
 
+def comp_intcode(program, noun, verb):
+    program = program.copy()
+    program[1] = noun
+    program[2] = verb
+    op_ptr = 0
+    while program[op_ptr] != 99:
+        (op, in_1, in_2, out) = program[op_ptr:op_ptr+4]
+        if op == 1:
+            program[out] = program[in_1] + program[in_2]
+        elif op == 2:
+            program[out] = program[in_1] * program[in_2]
+        elif op == 99:
+            # not sure how this happened, but fine
+            break
+        else:
+            click.echo("Invalid op at %s, current state is \n%s" % (op_ptr, program))
+            exit(1)
+        op_ptr += 4
+    return program[0]
+
 @click.group()
 def cli():
     """Example Command Script"""
@@ -30,19 +50,13 @@ def fuel(data, recurse):
 def intcode(data):
     raw = data.read().replace("\n", "")
     program = [int(value) for value in raw.split(",")]
-    op_ptr = 0
-    while program[op_ptr] != 99:
-        (op, in_1, in_2, out) = program[op_ptr:op_ptr+4]
-        if op == 1:
-            program[out] = program[in_1] + program[in_2]
-        elif op == 2:
-            program[out] = program[in_1] * program[in_2]
-        elif op == 99:
-            # not sure how this happened, but fine
-            break
-        else:
-            click.echo("Invalid op at %s, current state is \n%s" % (op_ptr, program))
-            exit(1)
-        op_ptr += 4
-    click.echo("Position 0: %s" % program[0])
-    click.echo("Final state: %s" % program)
+    with tqdm(total=99*99) as pbar:
+        for i in range(99):
+            for j in range(99):
+                output = comp_intcode(program, i, j)
+                if output == 19690720:
+                    break
+                pbar.update(1)
+            if output == 19690720:
+                break
+    click.echo("noun: %s, verb: %s, answer: %s" % (i, j, 100 * i + j))
