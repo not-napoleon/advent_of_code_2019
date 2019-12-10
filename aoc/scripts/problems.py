@@ -109,3 +109,40 @@ def paths(data, taxi_mode):
             else:
                 best_dist = min(best_dist, dist)
     click.echo("Shortest distance to interection: %s" % best_dist)
+
+def is_valid(candidate):
+    found_double = False
+    run = 1
+    candidate = str(candidate)
+    for i in range(len(candidate)):
+        if i == 0:
+            continue
+        if candidate[i] == candidate[i-1]:
+            run += 1
+
+        if (candidate[i] != candidate[i-1]) or i == len(candidate)-1:
+            if run == 2:
+                found_double = True
+            run = 1
+
+        if int(candidate[i]) < int(candidate[i-1]):
+            return False
+    return found_double
+
+@cli.command()
+@click.argument('candidate', type=click.INT)
+def check_pw(candidate):
+    if is_valid(candidate):
+        click.echo("%s is a possible password" % candidate)
+    else:
+        click.echo("%s is NOT a possible password" % candidate)
+
+@cli.command()
+@click.argument('lower', type=click.INT)
+@click.argument('upper', type=click.INT)
+def pword(lower, upper):
+    count = 0
+    for i in range(lower, upper):
+        if is_valid(i):
+            count += 1
+    click.echo("There are %s valid passwords in that range" % count)
